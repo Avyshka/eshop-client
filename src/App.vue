@@ -48,7 +48,7 @@ export default {
     this.blackList = localStorage.getItem("my_eshop_black")?.split(",") || [];
 
     try {
-      const response = await axios.get("http://localhost:3000/api/games");
+      const response = await axios.get("https://eshop-server-43a9.onrender.com/api/games");
       this.allList = response.data;
     } catch (error) {
       console.error("Ошибка загрузки игр:", error);
