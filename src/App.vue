@@ -1,15 +1,23 @@
 <template>
   <div id="app">
     <div class="top-panel">
-      <div class="offline">offline</div>
-      <select v-model="filter">
-        <option value="all">All</option>
-        <option value="wish">Wish</option>
-        <option value="black">Black</option>
-      </select>
-      <button v-if="selectedItem && filter === 'all'" v-on:click="toBlackList">To black list</button>
-      <button v-if="selectedItem && filter === 'all'" v-on:click="toWishList">To wish list</button>
-      <button v-if="selectedItem && filter !== 'all'" v-on:click="toAllList">Remove from list</button>
+      <div class="left">
+        <div v-if="isOffline" class="offline">offline</div>
+        <div class="input">
+          <label for="start">Start from:</label>
+          <input type="text" id="start" v-model="start" v-on:input="loadGames"/>
+        </div>
+        <select v-model="filter">
+          <option value="all">All</option>
+          <option value="wish">Wish</option>
+          <option value="black">Black</option>
+        </select>
+      </div>
+      <div class="right">
+        <button v-if="selectedItem && filter === 'all'" v-on:click="toBlackList">To black list</button>
+        <button v-if="selectedItem && filter === 'all'" v-on:click="toWishList">To wish list</button>
+        <button v-if="selectedItem && filter !== 'all'" v-on:click="toAllList">Remove from list</button>
+      </div>
     </div>
 
     <div class="wrapper">
@@ -39,6 +47,7 @@ export default {
       wishList: [],
       blackList: [],
       selectedItem: null,
+      start: 0,
       filter: "all",
       isOffline: false
     }
@@ -46,16 +55,19 @@ export default {
   async mounted() {
     this.wishList = localStorage.getItem("my_eshop_wish")?.split(",") || [];
     this.blackList = localStorage.getItem("my_eshop_black")?.split(",") || [];
-
-    try {
-      const response = await axios.get("https://eshop-server-43a9.onrender.com/api/games");
-      this.allList = response.data;
-    } catch (error) {
-      console.error("Ошибка загрузки игр:", error);
-      this.allList = select.response.docs;
-    }
+    await this.loadGames();
   },
   methods: {
+    async loadGames() {
+      try {
+        const response = await axios.get(`https://eshop-server-43a9.onrender.com/api/games?start=${this.start}`);
+        this.allList = response.data;
+      } catch (error) {
+        this.isOffline = true;
+        console.error("Error loading games:", error);
+        this.allList = select.response.docs;
+      }
+    },
     itemSelected(item) {
       this.selectedItem = item;
     },
@@ -131,7 +143,7 @@ html, body {
 
 .wrapper {
   display: grid;
-  grid-template-columns: auto 240px;
+  grid-template-columns: auto 280px;
   position: relative;
   height: calc(100% - 2em);
   overflow: hidden;
@@ -141,9 +153,32 @@ html, body {
   margin: 0 0.4em;
   height: 2em;
   display: flex;
-  justify-content: left;
-  align-items: center;
+  justify-content: space-between;
   gap: 0.3em;
+  align-items: center;
+}
+
+.left {
+  display: flex;
+  gap: 0.5em;
+}
+
+.right {
+  display: flex;
+  gap: 0.3em;
+}
+
+.input {
+  margin: auto;
+}
+
+.input label {
+  font-size: 0.8em;
+  color: #666;
+}
+
+.input input {
+  width: 50px;
 }
 
 select {
@@ -159,6 +194,6 @@ select {
   padding: 0.2em 1em;
   color: white;
   font-size: 0.7em;
-  margin-right: 2em;
+  margin: auto;
 }
 </style>
